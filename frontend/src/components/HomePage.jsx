@@ -3,6 +3,7 @@
 import Header from "@/components/Header";
 import LeftSidebar from "@/components/LeftSidebar";
 import RightSidebar from "@/components/RightSidebar";
+import StorySection from "@/components/StorySection";
 
 export default function HomePage() {
   return (
@@ -14,7 +15,10 @@ export default function HomePage() {
         <div className="mx-auto flex max-w-[1600px] gap-6 px-4 lg:px-6">
           {/* Feed */}
           <div className="min-w-0 flex-1 md:ml-72">
-            <div className="mx-auto max-w-2xl py-4 lg:max-w-3xl">Trang chủ</div>
+            <div className="mx-auto max-w-2xl py-4 lg:max-w-3xl">
+              <StorySection />
+              Trang chủ
+            </div>
           </div>
 
           {/* Right Sidebar */}
