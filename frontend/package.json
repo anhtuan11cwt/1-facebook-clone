@@ -1,14 +1,4 @@
 {
-  "name": "frontend",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "predev": "npx kill-port 3000",
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
-  },
   "dependencies": {
     "next": "16.2.9",
     "postcss": "^8.5.15",
@@ -16,9 +6,24 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.4.16",
     "@tailwindcss/postcss": "^4.3.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "tailwindcss": "^4.3.1"
-  }
+  },
+  "name": "frontend",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "check": "biome check --write",
+    "check2": "biome check --write --unsafe",
+    "dev": "next dev",
+    "format": "biome format --write",
+    "lint": "eslint",
+    "lint2": "biome lint --write",
+    "predev": "npx kill-port 3000",
+    "start": "next start"
+  },
+  "version": "0.1.0"
 }
