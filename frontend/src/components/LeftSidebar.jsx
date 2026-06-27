@@ -10,8 +10,8 @@ import useSidebarStore from "@/store/sidebarStore";
 
 const menuItems = [
   { href: "/", icon: Home, title: "Trang chủ" },
-  { href: "/friends", icon: Users, title: "Bạn bè" },
-  { href: "/videos", icon: Video, title: "Video" },
+  { href: "/friends-list", icon: Users, title: "Bạn bè" },
+  { href: "/video-feed", icon: Video, title: "Video" },
   { href: "/messages", icon: MessageCircle, title: "Tin nhắn" },
   { href: "/profile", icon: User, title: "Hồ sơ" },
   { href: "/notifications", icon: Bell, title: "Thông báo" },

@@ -32,8 +32,8 @@ import useSidebarStore from "@/store/sidebarStore";
 
 const navigation = [
   { icon: LayoutDashboard, name: "Trang chủ", path: "/" },
-  { icon: Video, name: "Video", path: "/videos" },
-  { icon: Users, name: "Bạn bè", path: "/friends" },
+  { icon: Video, name: "Video", path: "/video-feed" },
+  { icon: Users, name: "Bạn bè", path: "/friends-list" },
 ];
 
 export default function Header() {
