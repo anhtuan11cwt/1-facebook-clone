@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Image as ImageIcon, Smile, X } from "lucide-react";
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import { useId, useRef, useState } from "react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -99,18 +100,21 @@ export default function NewPostForm({ isPostFormOpen, setIsPostFormOpen }) {
               initial={{ height: 0, opacity: 0 }}
             >
               {selectedFile?.type.startsWith("video") ? (
-                // biome-ignore lint/a11y/useMediaCaption: local file preview, no captions available
                 <video
                   className="max-h-80 w-full object-contain"
                   controls
                   src={filePreview}
-                />
+                >
+                  <track kind="captions" />
+                </video>
               ) : (
-                // biome-ignore lint/performance/noImgElement: local file preview blob URL
-                <img
+                <Image
                   alt="Preview"
                   className="max-h-80 w-full object-contain"
+                  height={0}
                   src={filePreview}
+                  unoptimized
+                  width={0}
                 />
               )}
               <button

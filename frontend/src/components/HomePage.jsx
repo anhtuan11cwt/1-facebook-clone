@@ -5,10 +5,12 @@ import { useState } from "react";
 import Header from "@/components/Header";
 import LeftSidebar from "@/components/LeftSidebar";
 import NewPostForm from "@/components/NewPostForm";
+import PostCard from "@/components/PostCard";
 import RightSidebar from "@/components/RightSidebar";
 import StorySection from "@/components/StorySection";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import posts from "@/data/posts";
 
 export default function HomePage() {
   const [isPostFormOpen, setIsPostFormOpen] = useState(false);
@@ -46,7 +48,11 @@ export default function HomePage() {
                 isPostFormOpen={isPostFormOpen}
                 setIsPostFormOpen={setIsPostFormOpen}
               />
-              Trang chủ
+              <div className="mt-4 space-y-4">
+                {posts.map((post) => (
+                  <PostCard key={post.id} post={post} />
+                ))}
+              </div>
             </div>
           </div>
 
