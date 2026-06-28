@@ -12,6 +12,7 @@ const useUserFriendStore = create((set) => ({
   deleteUserFromRequest: async (senderId) => {
     await deleteFriendRequest(senderId);
 
+    // Xóa khỏi danh sách request sau khi API thành công
     set((state) => ({
       friendRequests: state.friendRequests.filter(
         (user) => user._id !== senderId,
@@ -26,7 +27,7 @@ const useUserFriendStore = create((set) => ({
     try {
       const response = await getFriendRequests();
 
-      set({ friendRequests: response.data.data, isLoading: false });
+      set({ friendRequests: response.data, isLoading: false });
     } catch (error) {
       set({
         error: error.response?.data?.message || error.message,
@@ -39,7 +40,7 @@ const useUserFriendStore = create((set) => ({
     try {
       const response = await getFriendSuggestions();
 
-      set({ friendSuggestions: response.data.data });
+      set({ friendSuggestions: response.data });
     } catch (error) {
       set({
         error: error.response?.data?.message || error.message,
@@ -51,7 +52,7 @@ const useUserFriendStore = create((set) => ({
     try {
       const response = await getMutualFriends();
 
-      set({ mutualFriends: response.data.data });
+      set({ mutualFriends: response.data });
     } catch (error) {
       set({
         error: error.response?.data?.message || error.message,

@@ -39,3 +39,13 @@ export const sharePost = async (postId) => {
   const response = await api.post(`/posts/${postId}/share`);
   return response.data;
 };
+
+export const deletePost = async (postId) => {
+  const response = await api.delete(`/posts/${postId}`);
+  return response.data;
+};
+
+export const deleteComment = async (postId, commentId) => {
+  const response = await api.delete(`/posts/${postId}/comments/${commentId}`);
+  return response.data;
+};
