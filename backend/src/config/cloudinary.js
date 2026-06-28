@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { PassThrough } from "node:stream";
 
 import { v2 as cloudinary } from "cloudinary";

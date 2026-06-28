@@ -26,11 +26,13 @@ export const createStory = async (req, res) => {
       "1-facebook-clone/stories",
     );
 
-    const story = await Story.create({
+    let story = await Story.create({
       mediaType: req.file.mimetype.startsWith("image") ? "image" : "video",
       mediaUrl: uploadResult.secure_url,
       user: userId,
     });
+
+    story = await story.populate("user", "username profilePicture");
 
     return responseHandler(res, 201, "Tạo story thành công", story);
   } catch (error) {

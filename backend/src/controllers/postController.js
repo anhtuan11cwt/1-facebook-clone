@@ -113,6 +113,9 @@ export const likePost = async (req, res) => {
     post.likeCount += 1;
     await post.save();
 
+    await post.populate("comments.user", "username profilePicture");
+    await post.populate("user", "username profilePicture");
+
     return responseHandler(res, 200, "Đã thích bài viết", post);
   } catch (error) {
     return responseHandler(res, 500, error.message);
@@ -160,6 +163,9 @@ export const addComment = async (req, res) => {
     post.commentCount += 1;
     await post.save();
 
+    await post.populate("comments.user", "username profilePicture");
+    await post.populate("user", "username profilePicture");
+
     return responseHandler(res, 201, "Thêm bình luận thành công", post);
   } catch (error) {
     return responseHandler(res, 500, error.message);
@@ -199,6 +205,9 @@ export const deleteComment = async (req, res) => {
     post.commentCount = Math.max(0, post.commentCount - 1);
     await post.save();
 
+    await post.populate("comments.user", "username profilePicture");
+    await post.populate("user", "username profilePicture");
+
     return responseHandler(res, 200, "Xóa bình luận thành công", post);
   } catch (error) {
     return responseHandler(res, 500, error.message);
@@ -222,6 +231,9 @@ export const sharePost = async (req, res) => {
 
     post.shareCount += 1;
     await post.save();
+
+    await post.populate("comments.user", "username profilePicture");
+    await post.populate("user", "username profilePicture");
 
     return responseHandler(res, 200, "Đã chia sẻ bài viết", post);
   } catch (error) {
