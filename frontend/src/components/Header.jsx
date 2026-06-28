@@ -15,9 +15,10 @@ import {
   Video,
   X,
 } from "lucide-react";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { logoutUser } from "@/services/authService";
+import { getAllUsers } from "@/services/userService";
 import useSidebarStore from "@/store/sidebarStore";
 import useUserStore from "@/store/userStore";
 
@@ -43,18 +45,47 @@ export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
-  const [_isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [userList, setUserList] = useState([]);
+  const searchRef = useRef(null);
   const { toggleSidebar } = useSidebarStore();
   const { user, clearUser } = useUserStore();
 
+  useEffect(() => {
+    getAllUsers()
+      .then((res) => setUserList(res.data || []))
+      .catch(() => {});
+  }, []);
+
+  const filteredUsers = searchQuery
+    ? userList.filter((u) =>
+        u.username?.toLowerCase().includes(searchQuery.toLowerCase()),
+      )
+    : [];
+
+  useEffect(() => {
+    const handleClick = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setIsSearchOpen(false);
+      }
+    };
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
+  }, []);
+
   const handleNavigation = (path) => () => router.push(path);
 
-  // Xoá cookie + xoá store + đẩy về login
+  const handleUserClick = (id) => {
+    router.push(`/user-profile/${id}`);
+    setSearchQuery("");
+    setIsSearchOpen(false);
+  };
+
   const handleLogout = async () => {
     try {
       await logoutUser();
-
       clearUser();
       toast.success("Đã đăng xuất");
       router.replace("/user-login");
@@ -88,16 +119,46 @@ export default function Header() {
             </span>
           </motion.div>
 
-          <div className="relative hidden lg:block">
+          <div className="relative hidden lg:block" ref={searchRef}>
             <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               className="w-56 rounded-full pl-10 lg:w-64"
-              onBlur={() => {
-                setTimeout(() => setIsSearchOpen(false), 200);
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setIsSearchOpen(true);
               }}
               onFocus={() => setIsSearchOpen(true)}
               placeholder="Tìm kiếm Facebook"
+              value={searchQuery}
             />
+            {isSearchOpen && filteredUsers.length > 0 && (
+              <div className="absolute top-full mt-1 w-full rounded-xl border bg-card p-2 shadow-lg">
+                {filteredUsers.slice(0, 8).map((u) => (
+                  <button
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-muted"
+                    key={u._id}
+                    onClick={() => handleUserClick(u._id)}
+                    type="button"
+                  >
+                    <Avatar className="size-8">
+                      {u.profilePicture ? (
+                        <Image
+                          alt={u.username}
+                          className="rounded-full"
+                          fill
+                          src={u.profilePicture}
+                        />
+                      ) : (
+                        <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
+                          {u.username?.charAt(0)?.toUpperCase() || "U"}
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
+                    <span className="font-medium text-sm">{u.username}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <Button
@@ -136,15 +197,24 @@ export default function Header() {
           })}
         </nav>
 
-        {/* Right: User Dropdown */}
+        {/* Right: menu user (profile, settings, logout) */}
         <div className="justify-self-end">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button className="size-10 rounded-full p-0" variant="ghost">
                 <Avatar>
-                  <AvatarFallback className="bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300">
-                    {user?.username?.charAt(0)?.toUpperCase() || "U"}
-                  </AvatarFallback>
+                  {user?.profilePicture ? (
+                    <Image
+                      alt={user.username}
+                      className="rounded-full"
+                      fill
+                      src={user.profilePicture}
+                    />
+                  ) : (
+                    <AvatarFallback className="bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300">
+                      {user?.username?.charAt(0)?.toUpperCase() || "U"}
+                    </AvatarFallback>
+                  )}
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
@@ -190,8 +260,41 @@ export default function Header() {
             <Input
               autoFocus
               className="w-full rounded-full pl-10"
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setIsSearchOpen(true);
+              }}
               placeholder="Tìm kiếm Facebook"
+              value={searchQuery}
             />
+            {isSearchOpen && filteredUsers.length > 0 && (
+              <div className="absolute top-full mt-1 w-full rounded-xl border bg-card p-2 shadow-lg">
+                {filteredUsers.slice(0, 8).map((u) => (
+                  <button
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-muted"
+                    key={u._id}
+                    onClick={() => handleUserClick(u._id)}
+                    type="button"
+                  >
+                    <Avatar className="size-8">
+                      {u.profilePicture ? (
+                        <Image
+                          alt={u.username}
+                          className="rounded-full"
+                          fill
+                          src={u.profilePicture}
+                        />
+                      ) : (
+                        <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
+                          {u.username?.charAt(0)?.toUpperCase() || "U"}
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
+                    <span className="font-medium text-sm">{u.username}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

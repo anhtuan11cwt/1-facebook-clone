@@ -1,6 +1,7 @@
 "use client";
 
 import { Image as ImageIcon } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import Header from "@/components/Header";
 import LeftSidebar from "@/components/LeftSidebar";
@@ -14,12 +15,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import usePostStore from "@/store/postStore";
 import useUserStore from "@/store/userStore";
 
+// Trang chủ: story, new post form, feed bài viết
 export default function HomePage() {
   const [isPostFormOpen, setIsPostFormOpen] = useState(false);
   const { user } = useUserStore();
   const { posts, loading, fetchPosts, fetchStories } = usePostStore();
 
-  // Fetch posts + stories khi mount
   useEffect(() => {
     fetchPosts();
     fetchStories();
@@ -43,9 +44,18 @@ export default function HomePage() {
                 type="button"
               >
                 <Avatar className="size-10 shrink-0">
-                  <AvatarFallback className="bg-blue-100 text-blue-600 text-sm dark:bg-blue-900 dark:text-blue-300">
-                    {user?.username?.charAt(0)?.toUpperCase() || "U"}
-                  </AvatarFallback>
+                  {user?.profilePicture ? (
+                    <Image
+                      alt={user.username}
+                      className="rounded-full"
+                      fill
+                      src={user.profilePicture}
+                    />
+                  ) : (
+                    <AvatarFallback className="bg-blue-100 text-blue-600 text-sm dark:bg-blue-900 dark:text-blue-300">
+                      {user?.username?.charAt(0)?.toUpperCase() || "U"}
+                    </AvatarFallback>
+                  )}
                 </Avatar>
                 <Input
                   className="h-10 flex-1 cursor-pointer rounded-full border-none bg-muted/50 text-sm placeholder:text-muted-foreground focus-visible:ring-0"

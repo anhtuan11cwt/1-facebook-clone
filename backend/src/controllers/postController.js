@@ -106,6 +106,10 @@ export const likePost = async (req, res) => {
       post.likes = post.likes.filter((id) => id.toString() !== userId);
       post.likeCount = Math.max(0, post.likeCount - 1);
       await post.save();
+
+      await post.populate("comments.user", "username profilePicture");
+      await post.populate("user", "username profilePicture");
+
       return responseHandler(res, 200, "Đã bỏ thích bài viết", post);
     }
 

@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useId, useRef, useState } from "react";
 
 const EmojiPicker = dynamic(() => import("emoji-picker-react"), { ssr: false });
@@ -113,6 +114,7 @@ const normalizePost = (post) => ({
   },
 });
 
+// Key lưu trạng thái liked trong localStorage
 const LIKED_STORAGE_KEY = "likedPosts";
 
 export default function PostCard({ post: rawPost }) {
@@ -124,6 +126,7 @@ export default function PostCard({ post: rawPost }) {
     handleDeletePost,
   } = usePostStore();
   const { user: currentUser } = useUserStore();
+  const router = useRouter();
 
   const [isLiked, setIsLiked] = useState(() => {
     try {
@@ -231,25 +234,12 @@ export default function PostCard({ post: rawPost }) {
 
   const handleDelete = async () => {
     setIsDeleting(true);
-    // Xóa UI ngay, lưu rollback nếu API lỗi
     setIsDeleteDialogOpen(false);
-
-    const rollbackPosts = usePostStore.getState().posts;
-    const rollbackUserPosts = usePostStore.getState().userPosts;
-
-    usePostStore.setState((state) => ({
-      posts: state.posts.filter((p) => p._id !== post._id),
-      userPosts: state.userPosts.filter((p) => p._id !== post._id),
-    }));
     toast.success("Đã xóa bài viết");
 
     try {
       await handleDeletePost(post._id);
     } catch {
-      usePostStore.setState({
-        posts: rollbackPosts,
-        userPosts: rollbackUserPosts,
-      });
       toast.error("Xóa bài viết thất bại");
     } finally {
       setIsDeleting(false);
@@ -339,20 +329,33 @@ export default function PostCard({ post: rawPost }) {
                 )}
               </Avatar>
               <div>
-                <p className="font-semibold text-sm">{post.user.username}</p>
+                <button
+                  className="font-semibold text-sm hover:underline"
+                  onClick={() => {
+                    const userId = post.user._id;
+                    if (currentUser?._id === userId) {
+                      router.push("/user-profile");
+                    } else {
+                      router.push(`/user-profile/${userId}`);
+                    }
+                  }}
+                  type="button"
+                >
+                  {post.user.username}
+                </button>
                 <p className="text-muted-foreground text-xs">
                   {formatTimeAgo(post.createdAt)}
                 </p>
               </div>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size="icon-sm" variant="ghost">
-                  <MoreHorizontal className="size-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
-                {isOwnPost && (
+            {isOwnPost && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="icon-sm" variant="ghost">
+                    <MoreHorizontal className="size-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-44">
                   <DropdownMenuItem
                     className="gap-2 text-red-500 focus:text-red-500"
                     onClick={() => setIsDeleteDialogOpen(true)}
@@ -360,9 +363,9 @@ export default function PostCard({ post: rawPost }) {
                     <Trash2 className="size-4" />
                     <span>Xóa bài viết</span>
                   </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
 
           {/* Content */}
@@ -477,9 +480,18 @@ export default function PostCard({ post: rawPost }) {
             <div className="mt-3">
               <div className="flex items-center gap-2">
                 <Avatar className="size-8 shrink-0">
-                  <AvatarFallback className="bg-blue-100 text-blue-600 text-xs dark:bg-blue-900 dark:text-blue-300">
-                    {currentUser?.username?.charAt(0)?.toUpperCase() || "U"}
-                  </AvatarFallback>
+                  {currentUser?.profilePicture ? (
+                    <Image
+                      alt={currentUser.username}
+                      className="rounded-full"
+                      fill
+                      src={currentUser.profilePicture}
+                    />
+                  ) : (
+                    <AvatarFallback className="bg-blue-100 text-blue-600 text-xs dark:bg-blue-900 dark:text-blue-300">
+                      {currentUser?.username?.charAt(0)?.toUpperCase() || "U"}
+                    </AvatarFallback>
+                  )}
                 </Avatar>
                 <div className="relative flex-1">
                   <Input

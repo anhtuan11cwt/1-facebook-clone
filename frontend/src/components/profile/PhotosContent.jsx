@@ -1,11 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import profilePosts from "@/data/profilePosts";
 
-export default function PhotosContent() {
-  const photos = profilePosts.filter(
-    (post) => post.mediaType === "image" && post.mediaSrc,
+export default function PhotosContent({ posts }) {
+  const photos = (posts || []).filter(
+    (post) => post.mediaType === "image" && post.mediaUrl,
   );
 
   return (
@@ -17,14 +16,14 @@ export default function PhotosContent() {
           {photos.map((post) => (
             <div
               className="group relative aspect-square cursor-pointer overflow-hidden rounded-xl transition-transform hover:scale-105"
-              key={post.id}
+              key={post._id || post.id}
             >
               <Image
-                alt={post.caption || "Photo"}
+                alt={post.content || "Photo"}
                 className="object-cover transition-transform duration-300 group-hover:scale-110"
                 fill
                 sizes="(max-width: 768px) 50vw, 33vw"
-                src={post.mediaSrc}
+                src={post.mediaUrl}
               />
             </div>
           ))}

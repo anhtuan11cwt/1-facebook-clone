@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect } from "react";
+import { useEffect } from "react";
 import Header from "@/components/Header";
 import LeftSidebar from "@/components/LeftSidebar";
 import ProfileHeader from "@/components/profile/ProfileHeader";
@@ -9,26 +9,18 @@ import RightSidebar from "@/components/RightSidebar";
 import usePostStore from "@/store/postStore";
 import useUserStore from "@/store/userStore";
 
-// Route: /user-profile/:id (profile của user khác)
-export default function DynamicProfilePage({ params }) {
-  const unwrappedParams = use(params);
-  const {
-    user: currentUser,
-    profileData,
-    profileLoading,
-    fetchUserProfile,
-  } = useUserStore();
+// Trang profile cá nhân (isOwner = true)
+export default function ProfilePage() {
+  const { user, profileData, profileLoading, fetchUserProfile } =
+    useUserStore();
   const { userPosts, fetchUserPosts } = usePostStore();
 
   useEffect(() => {
-    if (unwrappedParams.id) {
-      fetchUserProfile(unwrappedParams.id);
-      fetchUserPosts(unwrappedParams.id);
+    if (user?._id) {
+      fetchUserProfile(user._id);
+      fetchUserPosts(user._id);
     }
-  }, [unwrappedParams.id, fetchUserProfile, fetchUserPosts]);
-
-  // Kiểm tra xem có phải chủ sở hữu profile không
-  const isOwner = currentUser?._id === unwrappedParams.id;
+  }, [user?._id, fetchUserProfile, fetchUserPosts]);
 
   return (
     <>
@@ -52,14 +44,14 @@ export default function DynamicProfilePage({ params }) {
                 </div>
               ) : (
                 <ProfileHeader
-                  isOwner={isOwner}
-                  profile={profileData}
+                  isOwner
+                  profile={profileData || user}
                   userPosts={userPosts}
                 />
               )}
               <ProfileTabs
-                isOwner={isOwner}
-                profile={profileData}
+                isOwner
+                profile={profileData || user}
                 userPosts={userPosts}
               />
             </div>

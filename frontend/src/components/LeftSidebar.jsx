@@ -9,6 +9,7 @@ import {
   Users,
   Video,
 } from "lucide-react";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 
 import toast from "react-hot-toast";
@@ -28,6 +29,7 @@ const menuItems = [
   { href: "/notifications", icon: Bell, title: "Thông báo" },
 ];
 
+// Sidebar trái: navigation + user info + logout
 export default function LeftSidebar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -69,9 +71,18 @@ export default function LeftSidebar() {
           {user ? (
             <>
               <Avatar className="size-12">
-                <AvatarFallback className="bg-blue-100 text-blue-600 text-lg dark:bg-blue-900 dark:text-blue-300">
-                  {user.username?.charAt(0)?.toUpperCase()}
-                </AvatarFallback>
+                {user.profilePicture ? (
+                  <Image
+                    alt={user.username}
+                    className="rounded-full"
+                    fill
+                    src={user.profilePicture}
+                  />
+                ) : (
+                  <AvatarFallback className="bg-blue-100 text-blue-600 text-lg dark:bg-blue-900 dark:text-blue-300">
+                    {user.username?.charAt(0)?.toUpperCase()}
+                  </AvatarFallback>
+                )}
               </Avatar>
               <span className="font-semibold text-base">{user.username}</span>
             </>
@@ -129,9 +140,18 @@ export default function LeftSidebar() {
             {user ? (
               <>
                 <Avatar className="size-8">
-                  <AvatarFallback className="bg-blue-100 text-blue-600 text-xs dark:bg-blue-900 dark:text-blue-300">
-                    {user.username?.charAt(0)?.toUpperCase()}
-                  </AvatarFallback>
+                  {user.profilePicture ? (
+                    <Image
+                      alt={user.username}
+                      className="rounded-full"
+                      fill
+                      src={user.profilePicture}
+                    />
+                  ) : (
+                    <AvatarFallback className="bg-blue-100 text-blue-600 text-xs dark:bg-blue-900 dark:text-blue-300">
+                      {user.username?.charAt(0)?.toUpperCase()}
+                    </AvatarFallback>
+                  )}
                 </Avatar>
                 <div className="flex flex-col">
                   <span className="font-medium text-sm">{user.username}</span>

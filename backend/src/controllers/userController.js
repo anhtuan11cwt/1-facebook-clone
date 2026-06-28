@@ -31,7 +31,7 @@ export const followUser = async (req, res) => {
     }
 
     if (currentUser.following.includes(userIdToFollow)) {
-      return responseHandler(res, 400, "Bạn đã follow người dùng này rồi");
+      return responseHandler(res, 400, "Bạn đã kết bạn với người dùng này rồi");
     }
 
     currentUser.following.push(userIdToFollow);

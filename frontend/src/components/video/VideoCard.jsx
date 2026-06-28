@@ -8,13 +8,29 @@ import {
 import { motion } from "framer-motion";
 import {
   Link2,
+  Loader2,
   MessageCircle,
   MoreHorizontal,
   Send,
   ThumbsUp,
+  Trash2,
+  X,
 } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-
+import toast from "react-hot-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,15 +39,59 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import VideoComments from "@/components/video/VideoComments";
+import usePostStore from "@/store/postStore";
+import useUserStore from "@/store/userStore";
+
+const formatTimeAgo = (dateStr) => {
+  if (!dateStr) return "";
+  if (Number.isNaN(Date.parse(dateStr))) return dateStr;
+
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  const diffMs = now - then;
+  const mins = Math.floor(diffMs / 60000);
+
+  if (mins < 1) return "Vừa xong";
+  if (mins < 60) return `${mins} phút trước`;
+
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} giờ trước`;
+
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days} ngày trước`;
+
+  return new Date(dateStr).toLocaleDateString("vi-VN");
+};
 
 export default function VideoCard({ video }) {
-  const [isLiked, setIsLiked] = useState(false);
+  const { handleLikePost, handleDeletePost } = usePostStore();
+  const { user: currentUser } = useUserStore();
+  const router = useRouter();
+
+  const [isLiked, setIsLiked] = useState(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("likedPosts") || "[]");
+      return Array.isArray(stored) && stored.includes(video.id);
+    } catch {
+      return false;
+    }
+  });
   const [likesCount, setLikesCount] = useState(video.likes);
   const [showComments, setShowComments] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  const isOwnPost = currentUser?._id === video.userId;
 
   const initials = video.user.name
     .split(" ")
@@ -40,9 +100,43 @@ export default function VideoCard({ video }) {
     .slice(0, 2)
     .toUpperCase();
 
-  const handleLike = () => {
+  const handleLike = async () => {
     setIsLiked((prev) => !prev);
     setLikesCount((c) => c + (isLiked ? -1 : 1));
+
+    try {
+      await handleLikePost(video.id);
+
+      const stored = JSON.parse(localStorage.getItem("likedPosts") || "[]");
+      if (isLiked) {
+        localStorage.setItem(
+          "likedPosts",
+          JSON.stringify(stored.filter((id) => id !== video.id)),
+        );
+      } else {
+        localStorage.setItem(
+          "likedPosts",
+          JSON.stringify([...stored, video.id]),
+        );
+      }
+    } catch {
+      setIsLiked((prev) => !prev);
+      setLikesCount((c) => c + (isLiked ? 1 : -1));
+    }
+  };
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    setIsDeleteDialogOpen(false);
+    toast.success("Đã xóa bài viết");
+
+    try {
+      await handleDeletePost(video.id);
+    } catch {
+      toast.error("Xóa bài viết thất bại");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const generateLink = () => `${window.location.origin}/videos/${video.id}`;
@@ -95,18 +189,57 @@ export default function VideoCard({ video }) {
         <div className="flex items-center justify-between px-4 pt-4">
           <div className="flex items-center gap-3">
             <Avatar className="size-10">
-              <AvatarFallback className="bg-blue-100 text-blue-600 text-sm dark:bg-blue-900 dark:text-blue-300">
-                {initials}
-              </AvatarFallback>
+              {video.user.avatar ? (
+                <Image
+                  alt={video.user.name}
+                  className="rounded-full"
+                  fill
+                  src={video.user.avatar}
+                />
+              ) : (
+                <AvatarFallback className="bg-blue-100 text-blue-600 text-sm dark:bg-blue-900 dark:text-blue-300">
+                  {initials}
+                </AvatarFallback>
+              )}
             </Avatar>
             <div>
-              <p className="font-semibold text-sm">{video.user.name}</p>
-              <p className="text-muted-foreground text-xs">{video.createdAt}</p>
+              <button
+                className="font-semibold text-sm hover:underline"
+                onClick={() => {
+                  const userId = video.userId;
+                  if (currentUser?._id === userId) {
+                    router.push("/user-profile");
+                  } else {
+                    router.push(`/user-profile/${userId}`);
+                  }
+                }}
+                type="button"
+              >
+                {video.user.name}
+              </button>
+              <p className="text-muted-foreground text-xs">
+                {formatTimeAgo(video.createdAt)}
+              </p>
             </div>
           </div>
-          <Button size="icon-sm" variant="ghost">
-            <MoreHorizontal className="size-5" />
-          </Button>
+          {isOwnPost && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="icon-sm" variant="ghost">
+                  <MoreHorizontal className="size-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuItem
+                  className="gap-2 text-red-500 focus:text-red-500"
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                >
+                  <Trash2 className="size-4" />
+                  <span>Xóa bài viết</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
 
         {/* Caption */}
@@ -194,7 +327,11 @@ export default function VideoCard({ video }) {
         {/* Comments */}
         {showComments && (
           <div className="px-4 pt-2 pb-4">
-            <VideoComments comments={video.comments} />
+            <VideoComments
+              comments={video.comments}
+              postId={video.id}
+              postUserId={video.userId}
+            />
           </div>
         )}
       </motion.div>
@@ -241,6 +378,44 @@ export default function VideoCard({ video }) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog
+        onOpenChange={(open) => {
+          if (!isDeleting) setIsDeleteDialogOpen(open);
+        }}
+        open={isDeleteDialogOpen}
+      >
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogMedia className="bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive">
+              <Trash2 />
+            </AlertDialogMedia>
+            <AlertDialogTitle>Xóa bài viết?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bài viết sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn tác.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting} variant="outline">
+              <X className="size-4" />
+              Hủy
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isDeleting}
+              onClick={handleDelete}
+              variant="destructive"
+            >
+              {isDeleting ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Trash2 className="size-4" />
+              )}
+              {isDeleting ? "Đang xóa..." : "Xóa"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

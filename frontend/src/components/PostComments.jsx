@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Loader2, MoreHorizontal, Trash2, X } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import {
@@ -149,6 +150,8 @@ export default function PostComments({
   postUserId,
 }) {
   const comments = (rawComments || []).map(normalizeComment);
+  const router = useRouter();
+  const { user: currentUser } = useUserStore();
   const [showComments, setShowComments] = useState(false);
   const [showAll, setShowAll] = useState(false);
 
@@ -201,9 +204,20 @@ export default function PostComments({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1">
                       <div className="min-w-0 flex-1 rounded-2xl bg-muted px-3 py-2">
-                        <p className="font-semibold text-xs">
+                        <button
+                          className="font-semibold text-xs hover:underline"
+                          onClick={() => {
+                            const userId = comment.userId;
+                            if (currentUser?._id === userId) {
+                              router.push("/user-profile");
+                            } else {
+                              router.push(`/user-profile/${userId}`);
+                            }
+                          }}
+                          type="button"
+                        >
                           {comment.user.name}
-                        </p>
+                        </button>
                         <p className="text-sm">{comment.content}</p>
                       </div>
                       <CommentMenu

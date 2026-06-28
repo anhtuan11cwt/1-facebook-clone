@@ -64,6 +64,9 @@ const useUserFriendStore = create((set) => ({
     await followUserService(userId);
 
     set((state) => ({
+      friendRequests: state.friendRequests.filter(
+        (user) => user._id !== userId,
+      ),
       friendSuggestions: state.friendSuggestions.filter(
         (user) => user._id !== userId,
       ),

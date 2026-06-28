@@ -7,7 +7,7 @@ import PhotosContent from "@/components/profile/PhotosContent";
 import PostContent from "@/components/profile/PostContent";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export default function ProfileTabs() {
+export default function ProfileTabs({ isOwner, profile, userPosts }) {
   const [activeTab, setActiveTab] = useState("posts");
 
   return (
@@ -33,11 +33,11 @@ export default function ProfileTabs() {
       </TabsList>
 
       <TabsContent value="posts">
-        <PostContent />
+        <PostContent isOwner={isOwner} posts={userPosts} profile={profile} />
       </TabsContent>
 
       <TabsContent value="about">
-        <IntroCard />
+        <IntroCard isOwner={isOwner} profile={profile} />
       </TabsContent>
 
       <TabsContent value="friends">
@@ -45,7 +45,7 @@ export default function ProfileTabs() {
       </TabsContent>
 
       <TabsContent value="photos">
-        <PhotosContent />
+        <PhotosContent posts={userPosts} />
       </TabsContent>
     </Tabs>
   );

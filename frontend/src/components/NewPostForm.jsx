@@ -115,9 +115,18 @@ export default function NewPostForm({ isPostFormOpen, setIsPostFormOpen }) {
           {/* User info */}
           <div className="flex items-center gap-3">
             <Avatar className="size-10">
-              <AvatarFallback className="bg-blue-100 text-blue-600 text-sm dark:bg-blue-900 dark:text-blue-300">
-                {user?.username?.charAt(0)?.toUpperCase() || "U"}
-              </AvatarFallback>
+              {user?.profilePicture ? (
+                <Image
+                  alt={user.username}
+                  className="rounded-full"
+                  fill
+                  src={user.profilePicture}
+                />
+              ) : (
+                <AvatarFallback className="bg-blue-100 text-blue-600 text-sm dark:bg-blue-900 dark:text-blue-300">
+                  {user?.username?.charAt(0)?.toUpperCase() || "U"}
+                </AvatarFallback>
+              )}
             </Avatar>
             <div>
               <p className="font-semibold text-sm">

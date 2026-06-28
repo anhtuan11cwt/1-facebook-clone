@@ -18,13 +18,15 @@ const replacePost = (list, updatedPost) =>
 const usePostStore = create((set, get) => ({
   error: null,
 
-  fetchPosts: async () => {
+  fetchPosts: async (force = false) => {
+    if (get().hasInitiallyLoaded && !force) return;
+
     set({ error: null, loading: true });
 
     try {
       const response = await getAllPosts();
 
-      set({ loading: false, posts: response.data });
+      set({ hasInitiallyLoaded: true, loading: false, posts: response.data });
     } catch (error) {
       set({
         error: error.response?.data?.message || error.message,
@@ -133,7 +135,20 @@ const usePostStore = create((set, get) => ({
   },
 
   handleDeletePost: async (postId) => {
-    await deletePost(postId);
+    const prevPosts = get().posts;
+    const prevUserPosts = get().userPosts;
+
+    set((state) => ({
+      posts: state.posts.filter((p) => p._id !== postId),
+      userPosts: state.userPosts.filter((p) => p._id !== postId),
+    }));
+
+    try {
+      await deletePost(postId);
+    } catch (error) {
+      set({ posts: prevPosts, userPosts: prevUserPosts });
+      throw error;
+    }
   },
 
   handleLikePost: async (postId) => {
@@ -157,6 +172,7 @@ const usePostStore = create((set, get) => ({
       userPosts: replacePost(state.userPosts, updatedPost),
     }));
   },
+  hasInitiallyLoaded: false,
   loading: false,
   posts: [],
   stories: [],
