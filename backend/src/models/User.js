@@ -2,6 +2,11 @@ import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
+    bio: {
+      default: null,
+      ref: "Bio",
+      type: mongoose.Schema.Types.ObjectId,
+    },
     coverPhoto: {
       default: null,
       type: String,

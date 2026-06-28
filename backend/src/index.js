@@ -8,6 +8,7 @@ import swaggerSpec from "./config/swagger.js";
 import authRoutes from "./routes/authRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
 import storyRoutes from "./routes/storyRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/posts", postRoutes);
 app.use("/api/v1/stories", storyRoutes);
+app.use("/api/v1/users", userRoutes);
 
 const port = process.env.PORT || 8080;
 
