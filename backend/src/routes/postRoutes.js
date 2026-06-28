@@ -1,10 +1,14 @@
 import { Router } from "express";
 
 import {
+  addComment,
   createPost,
+  deleteComment,
   deletePost,
   getAllPosts,
   getPostsByUserId,
+  likePost,
+  sharePost,
 } from "../controllers/postController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 import multerMiddleware from "../middleware/multerMiddleware.js";
@@ -464,6 +468,403 @@ router.get("/user/:userId", getPostsByUserId);
  *                   nullable: true
  *                   example: null
  */
+/**
+ * @openapi
+ * /posts/{postId}/likes:
+ *   post:
+ *     tags:
+ *       - Posts
+ *     summary: Thích hoặc bỏ thích bài viết
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: 665abc123def456789abc001
+ *     responses:
+ *       200:
+ *         description: Thành công (like/unlike)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Đã thích bài viết
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     user:
+ *                       type: string
+ *                     content:
+ *                       type: string
+ *                     mediaUrl:
+ *                       type: string
+ *                       nullable: true
+ *                     mediaType:
+ *                       type: string
+ *                       nullable: true
+ *                       enum: [image, video]
+ *                     likes:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     likeCount:
+ *                       type: number
+ *                     comments:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                     commentCount:
+ *                       type: number
+ *                     shares:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     shareCount:
+ *                       type: number
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *                     __v:
+ *                       type: number
+ *       404:
+ *         description: Không tìm thấy bài viết
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Không tìm thấy bài viết
+ *                 data:
+ *                   nullable: true
+ *                   example: null
+ */
+router.post("/:postId/likes", authMiddleware, likePost);
+
+/**
+ * @openapi
+ * /posts/{postId}/comments:
+ *   post:
+ *     tags:
+ *       - Posts
+ *     summary: Thêm bình luận vào bài viết (kèm ảnh/video)
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: 665abc123def456789abc001
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               text:
+ *                 type: string
+ *                 example: "Bài viết hay quá!"
+ *               media:
+ *                 type: string
+ *                 format: binary
+ *                 description: File ảnh hoặc video kèm theo bình luận
+ *             required:
+ *               - text
+ *     responses:
+ *       201:
+ *         description: Thêm bình luận thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Thêm bình luận thành công
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     user:
+ *                       type: string
+ *                     content:
+ *                       type: string
+ *                     mediaUrl:
+ *                       type: string
+ *                       nullable: true
+ *                     mediaType:
+ *                       type: string
+ *                       nullable: true
+ *                       enum: [image, video]
+ *                     likes:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     likeCount:
+ *                       type: number
+ *                     comments:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           user:
+ *                             type: string
+ *                           text:
+ *                             type: string
+ *                           mediaUrl:
+ *                             type: string
+ *                             nullable: true
+ *                           mediaType:
+ *                             type: string
+ *                             nullable: true
+ *                             enum: [image, video]
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                     commentCount:
+ *                       type: number
+ *                     shares:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     shareCount:
+ *                       type: number
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *                     __v:
+ *                       type: number
+ *       400:
+ *         description: Thiếu nội dung bình luận
+ *       404:
+ *         description: Không tìm thấy bài viết
+ */
+router.post(
+  "/:postId/comments",
+  authMiddleware,
+  multerMiddleware.single("media"),
+  addComment,
+);
+
+/**
+ * @openapi
+ * /posts/{postId}/share:
+ *   post:
+ *     tags:
+ *       - Posts
+ *     summary: Chia sẻ bài viết
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: 665abc123def456789abc001
+ *     responses:
+ *       200:
+ *         description: Chia sẻ thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Đã chia sẻ bài viết
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     user:
+ *                       type: string
+ *                     content:
+ *                       type: string
+ *                     mediaUrl:
+ *                       type: string
+ *                       nullable: true
+ *                     mediaType:
+ *                       type: string
+ *                       nullable: true
+ *                       enum: [image, video]
+ *                     likes:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     likeCount:
+ *                       type: number
+ *                     comments:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                     commentCount:
+ *                       type: number
+ *                     shares:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     shareCount:
+ *                       type: number
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *                     __v:
+ *                       type: number
+ *       404:
+ *         description: Không tìm thấy bài viết
+ */
+router.post("/:postId/share", authMiddleware, sharePost);
+
+/**
+ * @openapi
+ * /posts/{postId}/comments/{commentId}:
+ *   delete:
+ *     tags:
+ *       - Posts
+ *     summary: Xóa bình luận
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: 665abc123def456789abc001
+ *       - in: path
+ *         name: commentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: 665abc123def456789abc003
+ *     responses:
+ *       200:
+ *         description: Xóa bình luận thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Xóa bình luận thành công
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     user:
+ *                       type: string
+ *                     content:
+ *                       type: string
+ *                     mediaUrl:
+ *                       type: string
+ *                       nullable: true
+ *                     mediaType:
+ *                       type: string
+ *                       nullable: true
+ *                       enum: [image, video]
+ *                     likes:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     likeCount:
+ *                       type: number
+ *                     comments:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                     commentCount:
+ *                       type: number
+ *                     shares:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     shareCount:
+ *                       type: number
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *                     __v:
+ *                       type: number
+ *       401:
+ *         description: Không có quyền xóa
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Bạn không có quyền xóa bình luận này
+ *                 data:
+ *                   nullable: true
+ *                   example: null
+ *       404:
+ *         description: Không tìm thấy bài viết hoặc bình luận
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Không tìm thấy bình luận
+ *                 data:
+ *                   nullable: true
+ *                   example: null
+ */
+router.delete("/:postId/comments/:commentId", authMiddleware, deleteComment);
 router.delete("/:postId", authMiddleware, deletePost);
 
 export default router;

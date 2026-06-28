@@ -12,6 +12,15 @@ const postSchema = new mongoose.Schema(
           default: Date.now,
           type: Date,
         },
+        mediaType: {
+          default: null,
+          enum: ["image", "video"],
+          type: String,
+        },
+        mediaUrl: {
+          default: null,
+          type: String,
+        },
         text: {
           required: true,
           trim: true,
